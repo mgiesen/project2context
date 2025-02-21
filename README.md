@@ -1,2 +1,26 @@
-# project2context
-A lightweight Python script that creates a structured overview of your codebase for AI context. It scans your project directory, generates a tree structure, and aggregates all text-based files into a single, well-formatted context file - perfect for providing project context to Large Language Models.
+# Project2Context
+
+Generates a structured overview of your project for AI context. The script scans your codebase and creates a single file containing your project's structure and content, making it easy to provide context to Large Language Models.
+
+## Usage
+
+1. Place `project2context.py` in your project's root directory
+2. Run the script:
+   ```bash
+   python project2context.py
+   ```
+3. Find the generated `project-context.txt` in your project root
+
+## Configuration
+
+Edit these sets at the start of the script to customize:
+- `EXCLUDED_DIRS`: Directories to skip (e.g., node_modules)
+- `EXCLUDED_FILES`: Specific files to ignore
+- `TEXT_EXTENSIONS`: File types to include
+- `EXCLUDED_EXTENSIONS`: File types to skip
+
+## Output
+
+The script generates `project-context.txt` containing:
+- Directory tree structure
+- Content of all text files
