@@ -11,6 +11,11 @@ Generates a structured overview of your project for AI context. The script scans
    ```
 3. Find the generated `project-context.txt` in your project root
 
+## Requirements
+
+- Python 3.6 or higher
+- No additional packages required
+  
 ## Configuration
 
 Edit these sets at the start of the script to customize:
