@@ -11,11 +11,24 @@ Generates a structured overview of your project for AI context. The script scans
    # Python version
    python project2context.py
 
-   # OR Node.js version
+   # Node.js version
    node project2context.js
    ```
 
 3. Find the generated `project-context.txt` in your project root
+
+### Specifying Target Directory
+
+You can limit processing to a specific subdirectory:
+
+```bash
+# Process only subdirectories
+node project2context.js [target_directory]
+
+# Examples
+node project2context.js frontend
+node project2context.js frontend/css
+```
 
 ## Requirements
 

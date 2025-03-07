@@ -181,7 +181,7 @@ function generateTree(startPath, outputFile, prefix = "")
     }
 }
 
-function processDirectory(startPath, outputPath)
+function processDirectory(startPath, outputPath, baseDir)
 {
     /**
      * Main function for processing the project directory.
@@ -229,7 +229,8 @@ function processDirectory(startPath, outputPath)
                     const encoding = getFileEncoding(filePath);
                     const content = fs.readFileSync(filePath, { encoding });
 
-                    const relPath = path.relative(startPath, filePath);
+                    // Use relative path from the base directory
+                    const relPath = path.relative(baseDir, filePath);
                     outputFile.write(`\n<file path="${relPath}">\n`);
                     outputFile.write(content);
                     outputFile.write("\n</file>\n");
@@ -240,7 +241,7 @@ function processDirectory(startPath, outputPath)
 
                 } catch (error)
                 {
-                    const relPath = path.relative(startPath, filePath);
+                    const relPath = path.relative(baseDir, filePath);
                     outputFile.write(`\n<error file="${relPath}">${error.message}</error>\n`);
                 }
             }
@@ -263,12 +264,59 @@ function processDirectory(startPath, outputPath)
     return { fileCount, totalLines, totalTokens };
 }
 
+// Helper function to parse command line arguments
+function parseArgs()
+{
+    const args = process.argv.slice(2);
+
+    // Default values
+    const options = {
+        targetDir: ''
+    };
+
+    // Simple parsing: treat the first argument as the target directory
+    if (args.length > 0)
+    {
+        options.targetDir = args[0];
+    }
+
+    return options;
+}
+
 // Main execution
 try
 {
+    // Parse command line args
+    const { targetDir } = parseArgs();
+
+    // Fixed output file name as per README
+    const outputFile = 'project-context.txt';
+
+    // Get the current directory
     const currentDir = process.cwd();
-    const outputFile = "project-context.txt";
-    const { fileCount, totalLines, totalTokens } = processDirectory(currentDir, outputFile);
+
+    // Resolve the target directory (join if relative path is provided)
+    const resolvedTargetDir = targetDir
+        ? path.resolve(currentDir, targetDir)
+        : currentDir;
+
+    // Make sure the directory exists
+    if (!fs.existsSync(resolvedTargetDir))
+    {
+        throw new Error(`Directory does not exist: ${resolvedTargetDir}`);
+    }
+
+    if (!fs.statSync(resolvedTargetDir).isDirectory())
+    {
+        throw new Error(`Not a directory: ${resolvedTargetDir}`);
+    }
+
+    // Base directory for relative paths in output
+    const baseDir = currentDir;
+
+    console.log(`Processing directory: ${path.relative(currentDir, resolvedTargetDir) || '.'}`);
+
+    const { fileCount, totalLines, totalTokens } = processDirectory(resolvedTargetDir, outputFile, baseDir);
 
     console.log("\nProject Context Generation Complete");
     console.log(`Output file: ${outputFile}`);
@@ -276,7 +324,8 @@ try
     console.log(`Total lines: ${totalLines}`);
     console.log(`Estimated tokens: ${totalTokens}`);
 
-} catch (error)
+}
+catch (error)
 {
     console.error(`Error: ${error.message}`);
 }

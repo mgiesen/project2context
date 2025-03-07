@@ -102,7 +102,7 @@ def generate_tree(start_path, output_file, prefix=""):
             if should_process_file(item.path):
                 output_file.write(f"{current_prefix}{item.name}\n")
 
-def process_directory(start_path, output_path):
+def process_directory(start_path, output_path, base_dir):
     """Main function for processing the project directory."""
     total_lines = 0
     total_tokens = 0
@@ -130,7 +130,8 @@ def process_directory(start_path, output_path):
                         with open(file_path, 'r', encoding=encoding) as f:
                             content = f.read()
                             
-                        rel_path = os.path.relpath(file_path, start_path)
+                        # Use relative path from the base directory
+                        rel_path = os.path.relpath(file_path, base_dir)
                         output_file.write(f"\n<file path=\"{rel_path}\">\n")
                         output_file.write(content)
                         output_file.write("\n</file>\n")
@@ -140,6 +141,8 @@ def process_directory(start_path, output_path):
                         file_count += 1
                         
                     except Exception as e:
+                        # Use relative path from the base directory
+                        rel_path = os.path.relpath(file_path, base_dir)
                         output_file.write(f"\n<error file=\"{rel_path}\">{str(e)}</error>\n")
 
         output_file.write("</file_contents>\n")
@@ -147,11 +150,49 @@ def process_directory(start_path, output_path):
 
     return file_count, total_lines, total_tokens
 
+def parse_args():
+    """Parse command line arguments."""
+    args = sys.argv[1:]
+    
+    # Default value
+    options = {
+        'target_dir': ''
+    }
+    
+    # Simple parsing: treat the first argument as the target directory
+    if len(args) > 0:
+        options['target_dir'] = args[0]
+    
+    return options
+
 if __name__ == "__main__":
     try:
-        current_dir = os.getcwd()
+        # Parse command line args
+        options = parse_args()
+        
+        # Fixed output file name as per README
         output_file = "project-context.txt"
-        files, lines, tokens = process_directory(current_dir, output_file)
+        
+        # Get the current directory
+        current_dir = os.getcwd()
+        
+        # Resolve the target directory
+        target_dir = options['target_dir']
+        resolved_target_dir = os.path.join(current_dir, target_dir) if target_dir else current_dir
+        
+        # Make sure the directory exists
+        if not os.path.exists(resolved_target_dir):
+            raise FileNotFoundError(f"Directory does not exist: {resolved_target_dir}")
+        
+        if not os.path.isdir(resolved_target_dir):
+            raise NotADirectoryError(f"Not a directory: {resolved_target_dir}")
+        
+        # Base directory for relative paths in output (current dir)
+        base_dir = current_dir
+        
+        print(f"Processing directory: {os.path.relpath(resolved_target_dir, current_dir) or '.'}")
+        
+        files, lines, tokens = process_directory(resolved_target_dir, output_file, base_dir)
         
         print(f"\nProject Context Generation Complete")
         print(f"Output file: {output_file}")
